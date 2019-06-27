@@ -3,17 +3,21 @@ import {
   interactiveLoginWithAuthResponse,
   loginWithServicePrincipalSecretWithAuthResponse,
   AuthResponse,
+
 } from "@azure/ms-rest-nodeauth";
 
-export class AzureLoginService {
-  public static async login(): Promise<AuthResponse> {
-    const subscriptionId = process.env.azureSubId;
-    const clientId = process.env.azureServicePrincipalClientId;
-    const secret = process.env.azureServicePrincipalPassword;
-    const tenantId = process.env.azureServicePrincipalTenantId;
+export interface AzureLoginOptions {
+  subscriptionId?: string;
+  clientId?: string;
+  tenantId?: string;
+  password?: string;
+  interactive?: boolean;
+}
 
-    if (subscriptionId && clientId && secret && tenantId) {
-      return await AzureLoginService.servicePrincipalLogin(clientId, secret, tenantId);
+export class AzureLoginService {
+  public static async login(options: AzureLoginOptions = {}): Promise<AuthResponse> {
+    if (options.clientId && options.password && options.tenantId) {
+      return await AzureLoginService.servicePrincipalLogin(options);
     } else {
       return await AzureLoginService.interactiveLogin();
     }
@@ -24,7 +28,7 @@ export class AzureLoginService {
     return await interactiveLoginWithAuthResponse();
   }
 
-  public static async servicePrincipalLogin(clientId: string, secret: string, tenantId: string): Promise<AuthResponse> {
-    return loginWithServicePrincipalSecretWithAuthResponse(clientId, secret, tenantId);
+  public static async servicePrincipalLogin(options: AzureLoginOptions): Promise<AuthResponse> {
+    return loginWithServicePrincipalSecretWithAuthResponse(options.clientId, options.password, options.tenantId);
   }
 }

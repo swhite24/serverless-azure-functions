@@ -16,7 +16,9 @@ import { AzureApimServicePlugin } from "./plugins/apim/apimServicePlugin";
 import { AzureApimFunctionPlugin } from "./plugins/apim/apimFunctionPlugin";
 import { AzureFuncPlugin } from "./plugins/func/azureFunc";
 import { AzureOfflinePlugin } from "./plugins/offline/azureOfflinePlugin"
+import dotenv from "dotenv";
 
+dotenv.config();
 
 export default class AzureIndex {
   public constructor(private serverless: Serverless, private options) {

@@ -47,3 +47,19 @@ export interface ServerlessAzureConfig {
   plugins: string[];
   functions: any;
 }
+
+export interface ServerlessCommand {
+  usage: string;
+  lifecycleEvents: string[];
+  options?: {
+    [key: string]: {
+      usage: string;
+      shortcut?: string;
+    };
+  };
+  commands?: ServerlessCommandMap;
+}
+
+export interface ServerlessCommandMap {
+  [command: string]: ServerlessCommand;
+}
