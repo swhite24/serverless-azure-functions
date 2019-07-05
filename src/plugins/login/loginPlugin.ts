@@ -4,12 +4,15 @@ import { AzureLoginService, AzureLoginOptions } from "../../services/loginServic
 import { ServerlessCommandMap } from "../../models/serverless";
 import fs from "fs";
 import os from "os";
+import { InteractiveLoginOptions, AuthResponse } from "@azure/ms-rest-nodeauth";
+import dotenv from "dotenv";
 
 export class AzureLoginPlugin {
   public hooks: { [eventName: string]: Promise<any> };
   public commands: ServerlessCommandMap;
 
   public constructor(private serverless: Serverless, private options: Serverless.Options & AzureLoginOptions) {
+    console.log("logging into stuff")
     this.hooks = {
       "before:package:initialize": this.login.bind(this),
       "before:deploy:list:list": this.login.bind(this),
@@ -55,6 +58,7 @@ export class AzureLoginPlugin {
   }
 
   private async initialize() {
+    console.log(this.options)
     const envFile = [];
     if (this.options.subscriptionId) {
       envFile.push(`azureSubId=${this.options.subscriptionId}`);
@@ -68,13 +72,22 @@ export class AzureLoginPlugin {
     if (this.options.password) {
       envFile.push(`azureServicePrincipalPassword=${this.options.password}`);
     }
-
+    console.log("envFile: ");
+    console.log(envFile);
     if (envFile.length && !fs.existsSync(".env")) {
       fs.writeFileSync(".env", envFile.join(os.EOL));
     }
   }
 
   private getLoginOptions(): AzureLoginOptions {
+    console.log("Options:");
+    console.log(process.env.azureSubId);
+    console.log(process.env.azureServicePrincipalClientId);
+    console.log(process.env.azureServicePrincipalTenantId);
+    console.log(process.env.azureServicePrincipalPassword);
+    console.log(process.env.azureServicePrincipalTenantId);
+    console.log(process.env.azureServicePrincipalPassword);
+    
     return {
       subscriptionId: this.options.subscriptionId || process.env.azureSubId,
       clientId: this.options.clientId || process.env.azureServicePrincipalClientId,
@@ -83,12 +96,53 @@ export class AzureLoginPlugin {
     };
   }
 
+  private getIOptions(): InteractiveLoginOptions{
+    return {
+      // environment: JSON.parse(process.env.environment),
+      domain: process.env.domain,
+      clientId: process.env.clientId,
+      // tokenCache: JSON.parse(process.env.tokenCache,),
+      tokenAudience: process.env.tokenAudience
+    }
+  }
+
+  private async saveToEnv(authResult: AuthResponse){
+    const envFile = [];
+    if (authResult.credentials.environment) {
+      envFile.push(`azureInteractiveEnvironment=${JSON.stringify(authResult.credentials.environment)}`);
+    }
+    if (authResult.credentials.domain) {
+      envFile.push(`azureInteractiveDomain=${authResult.credentials.domain}`);
+    }
+    if (authResult.credentials.clientId) {
+      envFile.push(`azureInteractiveClientId=${authResult.credentials.clientId}`);
+    }
+    if (authResult.credentials.tokenCache) {
+      envFile.push(`azureInteractiveTokenCache=${JSON.stringify(authResult.credentials.tokenCache)}`);
+    }
+    if (authResult.credentials.tokenAudience) {
+      envFile.push(`azureInteractiveTokenAudience=${authResult.credentials.tokenAudience}`);
+    }
+    console.log("envFile: ");
+    console.log(envFile);
+    if (envFile.length) {
+      if(!fs.existsSync(".env")) {
+        fs.writeFileSync(".env", envFile.join(os.EOL));
+      } else {
+        const env = fs.readFileSync(".env");
+        var parsedEnv = dotenv.parse(env);
+        console.log(parsedEnv);
+      }
+    }
+  }
+
   private async listSubscriptions() {
     const loginOptions = this.getLoginOptions();
+    const iOptions = this.getIOptions();
 
     const authResult = this.options.interactive
-      ? await AzureLoginService.login(loginOptions)
-      : await AzureLoginService.login();
+      ? await AzureLoginService.login(null, iOptions)
+      : await AzureLoginService.login(loginOptions);
 
     if (!(authResult.subscriptions && authResult.subscriptions.length)) {
       this.serverless.cli.log("No Azure subscriptions were found")
@@ -98,9 +152,12 @@ export class AzureLoginPlugin {
     subscriptions.forEach((subscription) => {
       this.serverless.cli.log(`${subscription.id}\t${subscription.name}\t${subscription.state}\t${subscription.environmentName}`);
     });
+    console.log(loginOptions);
+    console.log(authResult);
   }
 
   private async login() {
+    console.log(this.options);
     // If credentials have already been set then short circuit
     if (this.serverless.variables["azureCredentials"]) {
       return;
@@ -109,10 +166,11 @@ export class AzureLoginPlugin {
     this.serverless.cli.log("Logging into Azure...");
 
     const loginOptions = this.getLoginOptions();
+    const iOptions = this.getIOptions();
 
     try {
       const authResult = this.options.interactive
-        ? await AzureLoginService.login()
+        ? await AzureLoginService.login(null, iOptions)
         : await AzureLoginService.login(loginOptions);
 
       // Use environment variable for sub ID or use the first subscription in the list (service principal can
@@ -123,6 +181,9 @@ export class AzureLoginPlugin {
 
       this.serverless.cli.log("-> Successfully logged into Azure");
       this.serverless.cli.log(`-> Using subscription id: ${subscriptionId}`);
+      console.log("authResult: ");
+      console.log(authResult);
+      this.saveToEnv(authResult);
     }
     catch (e) {
       this.serverless.cli.log("Error logging into azure");

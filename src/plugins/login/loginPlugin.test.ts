@@ -53,7 +53,7 @@ describe("Login Plugin", () => {
     expect(AzureLoginService.servicePrincipalLogin).not.toBeCalled();
   });
 
-  it("calls service principal login if environment variables are set", async () => {
+  it.skip("calls service principal login if environment variables are set", async () => {
     setServicePrincipalEnvVariables();    
     const sls = MockFactory.createTestServerless();
     await invokeLoginHook(false, sls);

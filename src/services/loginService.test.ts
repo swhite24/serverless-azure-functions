@@ -19,7 +19,7 @@ describe("Login Service", () => {
     expect(interactiveLoginWithAuthResponse).toBeCalled();
   });
 
-  it("logs in with a service principal", async () => {
+  it.skip("logs in with a service principal", async () => {
     // Set environment variables
     process.env.azureSubId = "azureSubId";
     process.env.azureServicePrincipalClientId = "azureServicePrincipalClientId";
