@@ -80,13 +80,6 @@ export class AzureLoginPlugin {
   }
 
   private getLoginOptions(): AzureLoginOptions {
-    console.log("Options:");
-    console.log(process.env.azureSubId);
-    console.log(process.env.azureServicePrincipalClientId);
-    console.log(process.env.azureServicePrincipalTenantId);
-    console.log(process.env.azureServicePrincipalPassword);
-    console.log(process.env.azureServicePrincipalTenantId);
-    console.log(process.env.azureServicePrincipalPassword);
     
     return {
       subscriptionId: this.options.subscriptionId || process.env.azureSubId,
@@ -97,6 +90,8 @@ export class AzureLoginPlugin {
   }
 
   private getIOptions(): InteractiveLoginOptions{
+    console.log("process.env: ");
+    console.log(process.env.tokenCache)
     return {
       // environment: JSON.parse(process.env.environment),
       domain: process.env.domain,
