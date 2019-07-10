@@ -12,12 +12,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
-'use strict';
-
-var _ = require('underscore');
-var fs = require('fs');
-var path = require('path');
+import _ from "lodash";
+import fs from "fs";
+import path from "path";
 
 /**
  * Constructs a new disk file based token storage.
@@ -26,7 +23,7 @@ var path = require('path');
  * @param {string} filename filename to store/retrieve data from
  *
  */
-function FileTokenStorage(filename) {
+export function FileTokenStorage(filename) {
   this._setFile(filename);
   //this._filename = filename;
 }
@@ -34,9 +31,9 @@ function FileTokenStorage(filename) {
 _.extend(FileTokenStorage.prototype, {
   _save: function (entries, done) {
     var writeOptions = {
-      encoding: 'utf8',
+      encoding: "utf8",
       mode: 384, // Permission 0600 - owner read/write, nobody else has access
-      flag: 'w'
+      flag: "w"
     };
     
     fs.writeFile(this._filename, JSON.stringify(entries), writeOptions, done);
@@ -64,7 +61,7 @@ _.extend(FileTokenStorage.prototype, {
         entry.expiresOn = new Date(entry.expiresOn);
       });
     } catch (ex) {
-      if (ex.code !== 'ENOENT') {
+      if (ex.code !== "ENOENT") {
         err = ex;
       }
     }
@@ -85,4 +82,4 @@ _.extend(FileTokenStorage.prototype, {
   }
 });
 
-module.exports = FileTokenStorage;
+// module.exports = FileTokenStorage;

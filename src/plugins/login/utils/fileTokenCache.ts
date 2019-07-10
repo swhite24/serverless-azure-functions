@@ -12,17 +12,18 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import * as _ from "lodash";
-import * as fs from "fs";
-import * as path from "path";
+import _ from "lodash";
+import fs from "fs";
+import path from "path";
+import { FileTokenStorage } from "./fileTokenStorage";
 
-var FileTokenStorage = require('./fileTokenStorage');
+// var FileTokenStorage = require("./fileTokenStorage");
 /**
  * Constructs a new token cache that works with adal-node.
  * @constructor
  * @param {string} filePath - the file path to the token store.
  */
-function FileTokenCache(filePath: string) {
+export function FileTokenCache(filePath: string) {
   this._entries = null;
   this._tokenStorage = new FileTokenStorage(filePath);
 }
@@ -97,7 +98,7 @@ _.extend(FileTokenCache.prototype, {
     });
   },
 
-   /**
+  /**
    * Clears a collection of entries from the cache in a single batch operation.
    * @param  {Function} callback This function is called when the operation is complete.  Any error is provided as the
    *                             first parameter.
@@ -174,11 +175,11 @@ function homeFolder() {
     return process.env.HOMEDRIVE + process.env.HOMEPATH;
   }
   
-  throw new Error('No HOME path available');
+  throw new Error("No HOME path available");
 }
 
 function getTokenFilePath() {
-  var dir = path.join(homeFolder(), '.azure');
+  var dir = path.join(homeFolder(), ".azure");
   
   if (!exports.pathExistsSync(dir)) {
     fs.mkdirSync(dir, 502); // 0766
@@ -188,4 +189,4 @@ function getTokenFilePath() {
 }
 
 
-module.exports = FileTokenCache;
+// module.exports = FileTokenCache;
