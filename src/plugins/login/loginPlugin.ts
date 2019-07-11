@@ -4,12 +4,20 @@ import { AzureLoginService, AzureLoginOptions } from "../../services/loginServic
 import { ServerlessCommandMap } from "../../models/serverless";
 import fs from "fs";
 import os from "os";
+import path from "path"
 import { InteractiveLoginOptions, AuthResponse } from "@azure/ms-rest-nodeauth";
 import dotenv from "dotenv";
+import { FileTokenCache } from "./utils/fileTokenCache";
+
+
+const CONFIG_DIRECTORY = path.join(os.homedir(), ".azure");
+const SLS_TOKEN_FILE = path.join(CONFIG_DIRECTORY, "slsTokenCache.json");
+
 
 export class AzureLoginPlugin {
   public hooks: { [eventName: string]: Promise<any> };
   public commands: ServerlessCommandMap;
+  private fileTokenCache: FileTokenCache;
 
   public constructor(private serverless: Serverless, private options: Serverless.Options & AzureLoginOptions) {
     console.log("logging into stuff")
@@ -55,6 +63,8 @@ export class AzureLoginPlugin {
         },
       },
     };
+
+    this.fileTokenCache = new FileTokenCache();
   }
 
   private async initialize() {
@@ -75,7 +85,7 @@ export class AzureLoginPlugin {
     console.log("envFile: ");
     console.log(envFile);
     if (envFile.length && !fs.existsSync(".env")) {
-      fs.writeFileSync(".env", envFile.join(os.EOL));
+      fs.writeFileSync(SLS_TOKEN_FILE, envFile.join(os.EOL));
     }
   }
 
@@ -91,41 +101,51 @@ export class AzureLoginPlugin {
 
   private getIOptions(): InteractiveLoginOptions{
     console.log("process.env: ");
-    console.log(process.env.tokenCache)
-    return {
-      // environment: JSON.parse(process.env.environment),
-      domain: process.env.domain,
-      clientId: process.env.clientId,
-      // tokenCache: JSON.parse(process.env.tokenCache,),
-      tokenAudience: process.env.tokenAudience
+    // console.log(process.env.tokenCache)
+    if(fs.existsSync(SLS_TOKEN_FILE)){
+      return {};
+    } else {
+      console.log("no interactive login settings saved");
     }
+    // return {
+    //   // environment: JSON.parse(process.env.environment),
+    //   domain: process.env.domain,
+    //   clientId: process.env.clientId,
+    //   // tokenCache: JSON.parse(process.env.tokenCache,),
+    //   tokenAudience: process.env.tokenAudience
+    // }
   }
 
   private async saveToEnv(authResult: AuthResponse){
-    const envFile = [];
+    const envFile = {} as any;
     if (authResult.credentials.environment) {
-      envFile.push(`azureInteractiveEnvironment=${JSON.stringify(authResult.credentials.environment)}`);
+      // envFile.push(`azureInteractiveEnvironment=${JSON.stringify(authResult.credentials.environment)}`);
+      envFile.azureInteractiveEnvironment = JSON.stringify(authResult.credentials.environment);
     }
     if (authResult.credentials.domain) {
-      envFile.push(`azureInteractiveDomain=${authResult.credentials.domain}`);
+      // envFile.push(`azureInteractiveDomain=${authResult.credentials.domain}`);
+      envFile.azureInteractiveDomain = authResult.credentials.domain;
     }
     if (authResult.credentials.clientId) {
-      envFile.push(`azureInteractiveClientId=${authResult.credentials.clientId}`);
+      // envFile.push(`azureInteractiveClientId=${authResult.credentials.clientId}`);
+      envFile.azureInteractiveClientId = authResult.credentials.clientId;
     }
     if (authResult.credentials.tokenCache) {
-      envFile.push(`azureInteractiveTokenCache=${JSON.stringify(authResult.credentials.tokenCache)}`);
+      // envFile.push(`azureInteractiveTokenCache=${JSON.stringify(authResult.credentials.tokenCache)}`);
+      envFile.azureInteractiveTokenCache = JSON.stringify(authResult.credentials.tokenCache);
     }
     if (authResult.credentials.tokenAudience) {
-      envFile.push(`azureInteractiveTokenAudience=${authResult.credentials.tokenAudience}`);
+      // envFile.push(`azureInteractiveTokenAudience=${authResult.credentials.tokenAudience}`);
+      envFile.azureInteractiveTokenAudience = authResult.credentials.tokenAudience;
     }
     console.log("envFile: ");
     console.log(envFile);
-    if (envFile.length) {
-      if(!fs.existsSync(".env")) {
-        fs.writeFileSync(".env", envFile.join(os.EOL));
+    if (Object.keys(envFile).length != 0) {
+      if(!fs.existsSync(SLS_TOKEN_FILE)) {
+        fs.writeFileSync(SLS_TOKEN_FILE, envFile); // envFile.join(os.EOL));
       } else {
-        const env = fs.readFileSync(".env");
-        var parsedEnv = dotenv.parse(env);
+        const env = fs.readFileSync(SLS_TOKEN_FILE);
+        var parsedEnv = JSON.parse(env.toString()) //dotenv.parse(env);
         console.log(parsedEnv);
       }
     }
@@ -162,6 +182,8 @@ export class AzureLoginPlugin {
 
     const loginOptions = this.getLoginOptions();
     const iOptions = this.getIOptions();
+    console.log("iOptions: ");
+    console.log(iOptions);
 
     try {
       const authResult = this.options.interactive
@@ -179,6 +201,7 @@ export class AzureLoginPlugin {
       console.log("authResult: ");
       console.log(authResult);
       this.saveToEnv(authResult);
+      this.fileTokenCache.add(authResult.credentials.tokenCache, (err) => console.log(err))
     }
     catch (e) {
       this.serverless.cli.log("Error logging into azure");

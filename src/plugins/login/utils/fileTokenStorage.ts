@@ -15,31 +15,32 @@
 import _ from "lodash";
 import fs from "fs";
 import path from "path";
+import os from "os";
 
-/**
- * Constructs a new disk file based token storage.
- * @constructor
- *
- * @param {string} filename filename to store/retrieve data from
- *
- */
-export function FileTokenStorage(filename) {
-  this._setFile(filename);
+
+const CONFIG_DIRECTORY = path.join(os.homedir(), ".azure");
+const SLS_TOKEN_FILE = path.join(CONFIG_DIRECTORY, "slsTokenCache.json");
+export class FileTokenStorage {
+
+  // this._setFile(filename);
   //this._filename = filename;
-}
+  public fileName: string;
 
-_.extend(FileTokenStorage.prototype, {
-  _save: function (entries, done) {
+  public constructor(){
+    this.fileName = SLS_TOKEN_FILE;
+  }
+
+  private _save(entries, done): void  {
     var writeOptions = {
       encoding: "utf8",
       mode: 384, // Permission 0600 - owner read/write, nobody else has access
       flag: "w"
     };
     
-    fs.writeFile(this._filename, JSON.stringify(entries), writeOptions, done);
-  },
+    fs.writeFile(this.fileName, JSON.stringify(entries), writeOptions, done);
+  }
   
-  _setFile: function (filename) {
+  private _setFile(filename: string) {
     if (!fs.existsSync(filename)) {
       var dirname = path.dirname(filename);
       //create the directory if it does not exist
@@ -48,15 +49,15 @@ _.extend(FileTokenStorage.prototype, {
       }
       fs.writeFileSync(filename, JSON.stringify([]));
     }
-    this._filename = filename;
-  },
+    this.fileName = filename;
+  }
   
-  loadEntries: function (callback) {
+  public loadEntries(callback: Function) {
     var entries = [];
     var err;
     try {
-      var content = fs.readFileSync(this._filename);
-      entries = JSON.parse(content);
+      var content = fs.readFileSync(this.fileName);
+      entries = JSON.parse(content.toString());
       entries.forEach(function (entry) {
         entry.expiresOn = new Date(entry.expiresOn);
       });
@@ -66,20 +67,20 @@ _.extend(FileTokenStorage.prototype, {
       }
     }
     callback(err, entries);
-  },
+  }
   
-  removeEntries: function (entriesToRemove, entriesToKeep, callback) {
+  public removeEntries(entriesToRemove, entriesToKeep, callback) {
     this._save(entriesToKeep, callback);
-  },
+  }
   
-  addEntries: function (newEntries, existingEntries, callback) {
+  public addEntries(newEntries, existingEntries, callback) {
     var entries = existingEntries.concat(newEntries);
     this._save(entries, callback);
-  },
+  }
 
-  clear: function (callback) {   
+  public clear(callback) {   
     this._save([], callback); 
   }
-});
+}
 
 // module.exports = FileTokenStorage;

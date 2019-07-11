@@ -14,6 +14,7 @@
 */
 import _ from "lodash";
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { FileTokenStorage } from "./fileTokenStorage";
 
@@ -23,12 +24,14 @@ import { FileTokenStorage } from "./fileTokenStorage";
  * @constructor
  * @param {string} filePath - the file path to the token store.
  */
-export function FileTokenCache(filePath: string) {
-  this._entries = null;
-  this._tokenStorage = new FileTokenStorage(filePath);
-}
+export class FileTokenCache{
+  public entries: any;
+  public tokenStorage: FileTokenStorage;// = new FileTokenStorage(filePath);
 
-_.extend(FileTokenCache.prototype, {
+  public constructor(){
+    this.tokenStorage = new FileTokenStorage();
+  }
+
   /**
   * Load the cache entries. Does a lazy load,
   * loads from OS on first request, otherwise
@@ -37,32 +40,28 @@ _.extend(FileTokenCache.prototype, {
   * @param {function(err, Array)} callback callback
   *                               receiving cache entries.
   */
-  _loadEntries: function (callback) {
+  private _loadEntries(callback) {
     var self = this;
-    if (self._entries !== null) {
-      return callback(null, self._entries);
+    if (self.entries !== null) {
+      return callback(null, self.entries);
     }
     
-    self._tokenStorage.loadEntries(function (err, entries) {
+    self.tokenStorage.loadEntries(function (err, entries) {
       if (!err) {
-        self._entries = entries;
+        self.entries = entries;
       }
       self._normalizeUserId(entries);
       callback(err, entries);
     });
-  },
-  
-  _normalizeUserId: function (entries) {
+  }
+
+  private _normalizeUserId(entries) {
     entries.forEach(function (entry) {
       if (entry.userId) {
         entry.userId = entry.userId.toLowerCase();
       }
     });
-  },
-
-  isSecureCache: function () {
-    return this._tokenStorage.isSecureCache;
-  },
+  }
 
   /**
    * Removes a collection of entries from the cache in a single batch operation.
@@ -70,42 +69,42 @@ _.extend(FileTokenCache.prototype, {
    * @param  {Function} callback This function is called when the operation is complete.  Any error is provided as the
    *                             first parameter.
    */
-  remove: function remove(entries, callback) {
+  public remove(entries, callback) {
     var self = this;
     
     self._normalizeUserId(entries);
 
     function shouldKeep(entry) {
-      if (_.findWhere(entries, entry)) {
-        return false;
+      if (_.find(entries, entry)) {
+        return "false";
       }
-      return true;
+      return "true";
     }
 
     self._loadEntries(function (err, _entries) {
       if (err) { return callback(err); }
 
       var grouped = _.groupBy(_entries, shouldKeep);
-      var entriesToRemove = grouped[false] || [];
-      var entriesToKeep = grouped[true] || [];
+      var entriesToRemove = grouped["false"] || [];
+      var entriesToKeep = grouped["true"] || [];
       
-      self._tokenStorage.removeEntries(entriesToRemove, entriesToKeep, function (err) {
+      self.tokenStorage.removeEntries(entriesToRemove, entriesToKeep, function (err) {
         if (!err) {
-          self._entries = entriesToKeep;
+          self.entries = entriesToKeep;
         }
         callback(err);
       });
     });
-  },
+  }
 
   /**
    * Clears a collection of entries from the cache in a single batch operation.
    * @param  {Function} callback This function is called when the operation is complete.  Any error is provided as the
    *                             first parameter.
    */
-  clear: function clear(callback) {
-    this._tokenStorage.clear(callback);
-  },
+  public clear(callback) {
+    this.tokenStorage.clear(callback);
+  }
 
   /**
    * Adds a collection of entries to the cache in a single batch operation.
@@ -113,7 +112,7 @@ _.extend(FileTokenCache.prototype, {
    * @param  {Function} callback This function is called when the operation is complete.  Any error is provided as the
    *                             first parameter.
    */
-  add: function add(entries, callback) {
+  public add(entries, callback) {
     var self = this;
 
     self._normalizeUserId(entries);
@@ -133,16 +132,16 @@ _.extend(FileTokenCache.prototype, {
       // Add the new entries to the end of the cache.
       entries = _.compact(entries);
       
-      self._tokenStorage.addEntries(entries, self._entries, function (err) {
+      self.tokenStorage.addEntries(entries, self.entries, function (err) {
         if (!err) {
           entries.forEach(function (entry) {
-            self._entries.push(entry);
+            self.entries.push(entry);
           });
         }
         callback(err);
       });
     });
-  },
+  }
 
   /**
    * Finds all entries in the cache that match all of the passed in values.
@@ -153,39 +152,46 @@ _.extend(FileTokenCache.prototype, {
    *                             object.
    * @param  {TokenCacheFindCallback} callback
    */
-  find: function find(query, callback) {
+  public find(query, callback) {
     var self = this;
 
     self._normalizeUserId([query]);
     self._loadEntries(function (err, _entries) {
       if (err) { return callback(err); }
 
-      var results = _.where(_entries, query);
+      var results = _.filter(_entries, query);
       callback(null, results);
     });
   }
-});
-
-function homeFolder() {
-  if (process.env.HOME !== undefined) {
-    return process.env.HOME;
-  }
-  
-  if (process.env.HOMEDRIVE && process.env.HOMEPATH) {
-    return process.env.HOMEDRIVE + process.env.HOMEPATH;
-  }
-  
-  throw new Error("No HOME path available");
 }
 
-function getTokenFilePath() {
-  var dir = path.join(homeFolder(), ".azure");
+const CONFIG_DIRECTORY = path.join(os.homedir(), ".azure");
+const SLS_TOKEN_FILE = path.join(CONFIG_DIRECTORY, "slsTokenCache.json");
+
+_.extend(FileTokenCache.prototype, {
   
-  if (!exports.pathExistsSync(dir)) {
-    fs.mkdirSync(dir, 502); // 0766
+});
+
+// function homeFolder() {
+//   if (process.env.HOME !== undefined) {
+//     return process.env.HOME;
+//   }
+  
+//   if (process.env.HOMEDRIVE && process.env.HOMEPATH) {
+//     return process.env.HOMEDRIVE + process.env.HOMEPATH;
+//   }
+  
+//   throw new Error("No HOME path available");
+// }
+
+function getTokenFilePath() {
+  // var dir = path.join(homeFolder(), ".azure");
+  
+  if (!exports.pathExistsSync(CONFIG_DIRECTORY)) {
+    fs.mkdirSync(CONFIG_DIRECTORY, 502); // 0766
   }
   
-  return dir;
+  return CONFIG_DIRECTORY;
 }
 
 
