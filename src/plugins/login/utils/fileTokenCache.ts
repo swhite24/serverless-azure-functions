@@ -168,10 +168,6 @@ export class FileTokenCache{
 const CONFIG_DIRECTORY = path.join(os.homedir(), ".azure");
 const SLS_TOKEN_FILE = path.join(CONFIG_DIRECTORY, "slsTokenCache.json");
 
-_.extend(FileTokenCache.prototype, {
-  
-});
-
 // function homeFolder() {
 //   if (process.env.HOME !== undefined) {
 //     return process.env.HOME;
