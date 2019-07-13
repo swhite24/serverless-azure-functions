@@ -46,7 +46,7 @@ export class AzureLoginService {
       var devOptions = {
         tokenCache: iOptions
       }
-      autResp.credentials = new DeviceTokenCredentials(devOptions as any);
+      autResp.credentials = new DeviceTokenCredentials(undefined, undefined, undefined, undefined, undefined, iOptions.tokenCache);
     } else {
       console.log("need to do interactive login now")
       autResp = await interactiveLoginWithAuthResponse(iOptions); 
