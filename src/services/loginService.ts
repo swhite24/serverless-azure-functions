@@ -6,6 +6,7 @@ import {
   InteractiveLoginOptions,
   interactiveLogin,
   DeviceTokenCredentials,
+  LinkedSubscription,
 
 } from "@azure/ms-rest-nodeauth";
 import { SimpleFileTokenCache } from "../plugins/login/utils/simpleFileTokenCache";
@@ -23,24 +24,24 @@ export class AzureLoginService {
     console.log("Asure service options: ")
     console.log(options);
     console.log(iOptions)
-    if (options){
+    if (!iOptions){
       if (options.clientId && options.password && options.tenantId) {
-        console.log("wrong")
-        console.log(options)
+        console.log("wrong");
+        console.log(options);
         return await AzureLoginService.servicePrincipalLogin(options);
       }
     } else {
-      console.log("correct, here's the options we'll use to log in")
-      console.log(iOptions)
-      return await AzureLoginService.interactiveLogin(iOptions);
+      console.log("correct, here's the options we'll use to log in");
+      console.log(iOptions);
+      return await AzureLoginService.interactiveLogin(options, iOptions);
     }
   }
 
-  public static async interactiveLogin(iOptions?: InteractiveLoginOptions): Promise<AuthResponse> {
+  public static async interactiveLogin(options?: AzureLoginOptions, iOptions?: any): Promise<AuthResponse> {
     console.log("login service options: ");
     console.log(iOptions);
     await open("https://microsoft.com/devicelogin");
-    var autResp: AuthResponse;
+    var autResp: AuthResponse = {credentials: undefined, subscriptions: [iOptions.subscription]};
     if(!(iOptions.tokenCache as SimpleFileTokenCache).empty()){
       console.log("exisitng token");
       var devOptions = {
