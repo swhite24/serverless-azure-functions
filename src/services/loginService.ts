@@ -47,6 +47,7 @@ export class AzureLoginService {
       var devOptions = {
         tokenCache: iOptions
       }
+      // I don't think DeviceTokenCredentials is what we want... maybe MSITokenCredentials?
       autResp.credentials = new DeviceTokenCredentials(undefined, undefined, undefined, undefined, undefined, iOptions.tokenCache);
     } else {
       console.log("need to do interactive login now")

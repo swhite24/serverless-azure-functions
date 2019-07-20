@@ -6,14 +6,10 @@ import fs from "fs";
 import os from "os";
 import path from "path"
 import { InteractiveLoginOptions, AuthResponse } from "@azure/ms-rest-nodeauth";
-import dotenv from "dotenv";
-import { FileTokenCache } from "./utils/fileTokenCache";
 import { SimpleFileTokenCache } from "./utils/simpleFileTokenCache";
-import { json } from "graphlib";
 
 
 const CONFIG_DIRECTORY = path.join(os.homedir(), ".azure");
-const SLS_TOKEN_FILE = path.join(CONFIG_DIRECTORY, "slsTokenCache.json");
 
 
 export class AzureLoginPlugin {
@@ -98,16 +94,8 @@ export class AzureLoginPlugin {
     };
   }
 
-  private getIOptions(): InteractiveLoginOptions{
-    if(fs.existsSync("interactiveLogin.json")){
-      var iOptions: InteractiveLoginOptions = JSON.parse(fs.readFileSync("interactiveLogin.json").toString());
-      return  iOptions;
-    } else {
-      console.log("no interactive login settings saved");
-    }
-  }
 
-  private async saveToEnv(authResult: AuthResponse){
+  private async saveToJSON(authResult: AuthResponse){
     const envFile = {} as any;
     if (authResult.credentials.environment) {
       // envFile.push(`azureInteractiveEnvironment=${JSON.stringify(authResult.credentials.environment)}`);
@@ -190,7 +178,7 @@ export class AzureLoginPlugin {
 
       this.serverless.cli.log("-> Successfully logged into Azure");
       this.serverless.cli.log(`-> Using subscription id: ${subscriptionId}`);
-      this.saveToEnv(authResult);
+      this.saveToJSON(authResult);
       console.log(authResult);
       
     }
