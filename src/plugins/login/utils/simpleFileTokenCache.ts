@@ -45,6 +45,7 @@ export class SimpleFileTokenCache {
       return Object.keys(query).every(key => e[key] === query[key]);
     });
     cb(null, result);
+    return result;
   }
 
   public empty() {

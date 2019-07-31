@@ -40,9 +40,9 @@ export class AzureLoginService {
   public static async interactiveLogin(options?: AzureLoginOptions, iOptions?: any): Promise<AuthResponse> {
     console.log("login service options: ");
     console.log(iOptions);
-    await open("https://microsoft.com/devicelogin");
     var autResp: AuthResponse = {credentials: undefined, subscriptions: [iOptions.subscription]};
     if(!(iOptions.tokenCache as SimpleFileTokenCache).empty()){
+      await open("https://microsoft.com/devicelogin");
       console.log("exisitng token");
       var devOptions = {
         tokenCache: iOptions

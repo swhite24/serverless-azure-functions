@@ -3,6 +3,19 @@ import { AzureLoginService } from "../../services/loginService";
 import { MockFactory } from "../../test/mockFactory";
 import { invokeHook, setEnvVariables, unsetEnvVariables } from "../../test/utils";
 import { AzureLoginPlugin } from "./loginPlugin";
+import * as nodeauth from "@azure/ms-rest-nodeauth";
+import { SimpleFileTokenCache } from "./utils/simpleFileTokenCache";
+// import {
+//   interactiveLoginWithAuthResponse,
+//   loginWithServicePrincipalSecretWithAuthResponse,
+//   AuthResponse,
+//   InteractiveLoginOptions,
+//   interactiveLogin,
+//   DeviceTokenCredentials,
+//   LinkedSubscription,
+
+// } from "@azure/ms-rest-nodeauth";
+jest.setTimeout(3000000);
 
 describe("Login Plugin", () => {
 
@@ -89,4 +102,13 @@ describe("Login Plugin", () => {
     expect(AzureLoginService.servicePrincipalLogin).not.toBeCalled();
     expect(sls.cli.log).lastCalledWith(`Error: ${errorMessage}`)
   });
+
+
+  it("interactive login caches", async () => {
+    let simpleFileTokenCache = new SimpleFileTokenCache();
+    let token = simpleFileTokenCache.find({userId: "phcherne@microsoft.com"}, (err, message) => console.log(message));
+    console.log(token);
+    let authResp = await nodeauth.interactiveLoginWithAuthResponse({tokenCache: simpleFileTokenCache})
+    console.log(authResp);
+  })
 })
