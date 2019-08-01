@@ -1,5 +1,6 @@
 
 import Serverless from "serverless";
+import { ServerlessAzureProvider, ServerlessFunctionRuntime } from "../../models/serverless";
 import AzureProvider from "../../provider/azureProvider";
 import { PackageService } from "../../services/packageService";
 import { AzureBasePlugin } from "../azureBasePlugin";
@@ -18,7 +19,20 @@ export class AzurePackagePlugin extends AzureBasePlugin {
       "after:package:finalize": this.finalize.bind(this),
     };
 
+    if ((this.serverless.service.provider as ServerlessAzureProvider).runtime === ServerlessFunctionRuntime.Python) {
+      this.log("Got python")
+      this.hooks["package:compileFunctions"] = this.pythonPackage.bind(this);
+    } else {
+      this.log("did not get python")
+    }
+
+    this.log(JSON.stringify(this.hooks, null, 2));
+
     this.packageService = new PackageService(this.serverless, this.options);
+  }
+
+  private async pythonPackage() {
+    this.log("Packaging python");
   }
 
   private async setupProviderConfiguration(): Promise<void> {

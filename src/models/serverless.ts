@@ -33,6 +33,7 @@ export interface DeploymentConfig {
 export interface ServerlessAzureProvider {
   type?: string;
   prefix?: string;
+  runtime?: ServerlessFunctionRuntime;
   region: string;
   stage: string;
   name: string;
@@ -49,6 +50,11 @@ export interface ServerlessAzureProvider {
   hostingEnvironment?: ResourceConfig;
   virtualNetwork?: ResourceConfig;
   armTemplate?: ArmTemplateConfig;
+}
+
+export enum ServerlessFunctionRuntime {
+  Node = "nodejs",
+  Python = "python"
 }
 
 export interface ServerlessAzureConfig {

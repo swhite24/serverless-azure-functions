@@ -1,4 +1,3 @@
-import { spawn } from "child_process";
 import fs from "fs";
 import Serverless from "serverless";
 import configConstants from "../config";
@@ -57,65 +56,5 @@ export class OfflineService extends BaseService {
    */
   public async start() {
     await this.spawn(configConstants.funcCoreTools, configConstants.funcCoreToolsArgs);
-  }
-
-  /**
-   * Spawn a Node child process with predefined environment variables
-   * @param command CLI Command - NO ARGS
-   * @param args Array of arguments for CLI command
-   * @param env Additional environment variables to be set in addition to
-   * predefined variables in `serverless.yml`
-   */
-  private spawn(command: string, args?: string[], env?: any): Promise<void> {
-    env = {
-      ...this.serverless.service.provider["environment"],
-      ...env
-    }
-    this.log(`Spawning process '${command} ${args.join(" ")}'`);
-    return new Promise((resolve, reject) => {
-      const childProcess = spawn(command, args, {env});
-
-      childProcess.stdout.on("data", (data) => {
-        this.log(data, {
-          color: configConstants.funcConsoleColor,
-        }, command);
-      });
-
-      childProcess.stderr.on("data", (data) => {
-        this.log(data, {
-          color: "red",
-        }, command);
-      })
-
-      childProcess.on("message", (message) => {
-        this.log(message, {
-          color: configConstants.funcConsoleColor,
-        }, command);
-      });
-
-      childProcess.on("error", (err) => {
-        this.log(`${err}`, {
-          color: "red"
-        }, command);
-        reject(err);
-      });
-
-      childProcess.on("exit", (code) => {
-        this.log(`Exited with code: ${code}`, {
-          color: (code === 0) ? "green" : "red",
-        }, command);
-      });
-
-      childProcess.on("close", (code) => {
-        this.log(`Closed with code: ${code}`, {
-          color: (code === 0) ? "green" : "red",
-        }, command);
-        resolve();
-      });
-
-      childProcess.on("disconnect", () => {
-        this.log("Process disconnected");
-      });
-    });
   }
 }
