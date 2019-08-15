@@ -23,6 +23,7 @@ export abstract class BaseService {
   protected subscriptionId: string;
   protected resourceGroup: string;
   protected deploymentName: string;
+  protected artifactName: string;
   protected deploymentConfig: DeploymentConfig;
   protected storageAccountName: string;
   protected config: ServerlessAzureConfig;
@@ -43,6 +44,7 @@ export abstract class BaseService {
     this.resourceGroup = this.getResourceGroupName();
     this.deploymentConfig = this.getDeploymentConfig();
     this.deploymentName = this.getDeploymentName();
+    this.artifactName = this.getArtifactName(this.deploymentName);
     this.storageAccountName = StorageAccountResource.getResourceName(this.config);
 
     if (!this.credentials && authenticate) {
@@ -84,10 +86,9 @@ export abstract class BaseService {
    * Defaults can be found in the `config.ts` file
    */
   public getDeploymentConfig(): DeploymentConfig {
-    const providedConfig = this.serverless["deploy"] as DeploymentConfig;
     return {
       ...configConstants.deploymentConfig,
-      ...providedConfig,
+      ...this.config.provider.deployment,
     }
   }
 
@@ -123,21 +124,22 @@ export abstract class BaseService {
     const { deployment, artifact } = configConstants.naming.suffix;
     return `${deploymentName
       .replace(`rg-${deployment}`, artifact)
-      .replace(deployment, artifact)}`
+      .replace(deployment, artifact)}.zip`
   }
 
   /**
    * Get the access token from credentials token cache
    */
-  protected getAccessToken(): string {
-    return (this.credentials.tokenCache as any)._entries[0].accessToken;
+  protected async getAccessToken(): Promise<string> {
+    const token = await this.credentials.getToken();
+    return token ? token.accessToken : null;
   }
 
   /**
    * Sends an API request using axios HTTP library
    * @param method The HTTP method
    * @param relativeUrl The relative url
-   * @param options Additional HTTP options including headers, etc
+   * @param options Additional HTTP options including headers, etc.
    */
   protected async sendApiRequest(
     method: string,
@@ -145,7 +147,7 @@ export abstract class BaseService {
     options: any = {}
   ) {
     const defaultHeaders = {
-      Authorization: `Bearer ${this.getAccessToken()}`
+      Authorization: `Bearer ${await this.getAccessToken()}`
     };
 
     const allHeaders = {
@@ -187,6 +189,10 @@ export abstract class BaseService {
    */
   protected log(message: string, options?: ServerlessLogOptions, entity?: string,) {
     (this.serverless.cli.log as any)(message, entity, options);
+  }
+
+  protected prettyPrint(object: any) {
+    this.log(JSON.stringify(object, null, 2));
   }
 
   /**

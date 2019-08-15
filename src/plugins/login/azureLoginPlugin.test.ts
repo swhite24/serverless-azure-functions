@@ -52,6 +52,7 @@ describe("Login Plugin", () => {
   });
 
   it("calls login if azure credentials are not set", async () => {
+    unsetServicePrincipalEnvVariables();
     await invokeLoginHook();
     expect(AzureLoginService.interactiveLogin).toBeCalled();
     expect(AzureLoginService.servicePrincipalLogin).not.toBeCalled();
@@ -68,7 +69,7 @@ describe("Login Plugin", () => {
       undefined // would be options
     )
     expect(AzureLoginService.interactiveLogin).not.toBeCalled();
-    expect(sls.variables["azureCredentials"]).toEqual(credentials);
+    expect(JSON.stringify(sls.variables["azureCredentials"])).toEqual(JSON.stringify(credentials));
     expect(sls.variables["subscriptionId"]).toEqual("azureSubId");
   });
 
@@ -78,7 +79,7 @@ describe("Login Plugin", () => {
     await invokeLoginHook(false, sls);
     expect(AzureLoginService.servicePrincipalLogin).not.toBeCalled();
     expect(AzureLoginService.interactiveLogin).toBeCalled();
-    expect(sls.variables["azureCredentials"]).toEqual(credentials);
+    expect(JSON.stringify(sls.variables["azureCredentials"])).toEqual(JSON.stringify(credentials));
     expect(sls.variables["subscriptionId"]).toEqual("azureSubId");
   });
 
@@ -115,7 +116,7 @@ describe("Login Plugin", () => {
     expect(sls.variables["subscriptionId"]).toEqual("azureSubId");
     expect(sls.cli.log).toBeCalledWith("Using subscription ID: azureSubId");
   });
-  
+
   it("Uses the subscription ID specified in serverless yaml", async () => {
     const sls = MockFactory.createTestServerless();
     const opt = MockFactory.createTestServerlessOptions();
