@@ -24,7 +24,12 @@ export class AzurePackagePlugin extends AzureBasePlugin {
     if (this.getOption("package")) {
       this.log("No need to create bindings. Using pre-existing package");
       return Promise.resolve();
+    } else {
+      this.log("Clearing previous artifact");
+      await this.packageService.clearPreviousArtifact();
+
     }
+    this.log("About to create bindings");
     await this.packageService.createBindings();
     this.bindingsCreated = true;
 

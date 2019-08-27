@@ -156,7 +156,7 @@ export class FunctionAppService extends BaseService {
       await blobUpload;
       const sasUrl = await this.blobService.generateBlobSasTokenUrl(
         this.deploymentConfig.container,
-        this.artifactName
+        this.blobArtifactName
       )
       await this.updateFunctionAppSetting(
         functionApp,
@@ -257,7 +257,7 @@ export class FunctionAppService extends BaseService {
     await this.blobService.uploadFile(
       functionZipFile,
       this.deploymentConfig.container,
-      this.artifactName,
+      this.blobArtifactName,
     );
   }
 

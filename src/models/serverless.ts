@@ -50,7 +50,23 @@ export interface ServerlessAzureProvider {
   hostingEnvironment?: ResourceConfig;
   virtualNetwork?: ResourceConfig;
   armTemplate?: ArmTemplateConfig;
-  runtime: string; 
+  runtime: string;
+}
+
+export class ServerlessObject extends Serverless {
+  public processedInput: {
+    commands: ServerlessCliCommands[];
+    options: any;
+  }
+}
+
+export enum ServerlessCliCommands {
+  PACKAGE = "package",
+  DEPLOY = "deploy",
+  INVOKE = "invoke",
+  ROLLBACK = "rollback",
+  OFFLINE = "offline",
+  LIST = "list",
 }
 
 export interface ServerlessAzureConfig {

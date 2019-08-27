@@ -10,11 +10,14 @@ import {
   ServerlessAzureConfig,
   ServerlessAzureFunctionConfig,
   ServerlessAzureOptions,
-  ServerlessLogOptions
+  ServerlessLogOptions,
+  ServerlessCliCommands,
+  ServerlessObject
 } from "../models/serverless";
 import { Guard } from "../shared/guard";
 import { Utils } from "../shared/utils";
 import { AzureNamingService } from "./namingService";
+import path from "path";
 
 export abstract class BaseService {
   protected baseUrl: string;
@@ -23,10 +26,13 @@ export abstract class BaseService {
   protected subscriptionId: string;
   protected resourceGroup: string;
   protected deploymentName: string;
-  protected artifactName: string;
+  /** Name of artifact within blob storage */
+  protected blobArtifactName: string;
+  protected defaultPackagePath: string;
   protected deploymentConfig: DeploymentConfig;
   protected storageAccountName: string;
   protected config: ServerlessAzureConfig;
+  protected originalCommand: ServerlessCliCommands;
 
   protected constructor(
     protected serverless: Serverless,
@@ -45,8 +51,10 @@ export abstract class BaseService {
     this.config.provider.resourceGroup = this.resourceGroup;
     this.deploymentConfig = this.getDeploymentConfig();
     this.deploymentName = this.getDeploymentName();
-    this.artifactName = this.getArtifactName(this.deploymentName);
+    this.blobArtifactName = this.getArtifactName(this.deploymentName);
     this.storageAccountName = StorageAccountResource.getResourceName(this.config);
+    this.defaultPackagePath = path.join(serverless.config.servicePath, ".serverless", `${this.serviceName}.zip`);
+    this.originalCommand = (serverless as ServerlessObject).processedInput.commands[0]
 
     if (!this.credentials && authenticate) {
       throw new Error(

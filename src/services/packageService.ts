@@ -12,6 +12,15 @@ export class PackageService extends BaseService {
     super(serverless, options, false);
   }
 
+  public async clearPreviousArtifact() {
+    this.log(this.defaultPackagePath);
+    this.log(this.originalCommand);
+    if (fs.existsSync(this.defaultPackagePath)) {
+      this.log(`Removing previous artifact ${this.defaultPackagePath}`);
+      fs.unlinkSync(this.defaultPackagePath);
+    }
+  }
+
   /**
    * Creates the function.json binding files required for the serverless service
    */
