@@ -52,7 +52,7 @@ describe("Azure Package Plugin", () => {
     it("does not call create bindings if package specified in options", async () => {
       await invokeHook(plugin, "before:package:setupProviderConfiguration");
       expect(PackageService.prototype.createBindings).not.toBeCalled();
-      expect(sls.cli.log).lastCalledWith("No need to create bindings. Using pre-existing package");
+      expect(sls.cli.log).lastCalledWith("Deploying pre-built package. No need to create bindings");
     });
 
     it("does not call webpack if package specified in options", async () => {

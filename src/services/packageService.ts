@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import rimraf from "rimraf";
 import Serverless from "serverless";
 import { FunctionMetadata, Utils } from "../shared/utils";
 import { BaseService } from "./baseService";
@@ -12,10 +13,10 @@ export class PackageService extends BaseService {
     super(serverless, options, false);
   }
 
-  public async clearPreviousArtifact() {
-    if (fs.existsSync(this.packagePath)) {
-      this.log(`Removing previous artifact ${this.packagePath}`);
-      fs.unlinkSync(this.packagePath);
+  public cleanUpServerlessDir() {
+    if (fs.existsSync(this.serverlessDir)) {
+      this.log("Removing .serverless directory")
+      rimraf.sync(this.serverlessDir);
     }
   }
 
