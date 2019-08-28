@@ -11,8 +11,8 @@ import {
   ServerlessAzureFunctionConfig,
   ServerlessAzureOptions,
   ServerlessLogOptions,
-  ServerlessCliCommands,
-  ServerlessObject
+  ServerlessCliCommand,
+  ServerlessClass
 } from "../models/serverless";
 import { Guard } from "../shared/guard";
 import { Utils } from "../shared/utils";
@@ -28,11 +28,10 @@ export abstract class BaseService {
   protected deploymentName: string;
   /** Name of artifact within blob storage */
   protected blobArtifactName: string;
-  protected defaultPackagePath: string;
+  protected packagePath: string;
   protected deploymentConfig: DeploymentConfig;
   protected storageAccountName: string;
   protected config: ServerlessAzureConfig;
-  protected originalCommand: ServerlessCliCommands;
 
   protected constructor(
     protected serverless: Serverless,
@@ -53,8 +52,8 @@ export abstract class BaseService {
     this.deploymentName = this.getDeploymentName();
     this.blobArtifactName = this.getArtifactName(this.deploymentName);
     this.storageAccountName = StorageAccountResource.getResourceName(this.config);
-    this.defaultPackagePath = path.join(serverless.config.servicePath, ".serverless", `${this.serviceName}.zip`);
-    this.originalCommand = (serverless as ServerlessObject).processedInput.commands[0]
+    this.packagePath = this.getOption("package", path.join(
+      serverless.config.servicePath, ".serverless", `${this.serviceName}.zip`));
 
     if (!this.credentials && authenticate) {
       throw new Error(

@@ -3,6 +3,7 @@ import Serverless from "serverless";
 import AzureProvider from "../../provider/azureProvider";
 import { PackageService } from "../../services/packageService";
 import { AzureBasePlugin } from "../azureBasePlugin";
+import { ServerlessCliCommand, ServerlessClass } from "../../models/serverless";
 
 export class AzurePackagePlugin extends AzureBasePlugin {
   private bindingsCreated: boolean = false;
@@ -21,13 +22,17 @@ export class AzurePackagePlugin extends AzureBasePlugin {
   }
 
   private async setupProviderConfiguration(): Promise<void> {
-    if (this.getOption("package")) {
-      this.log("No need to create bindings. Using pre-existing package");
-      return Promise.resolve();
+    const providedPackage = this.getOption("package");
+    if (this.originalCommand === ServerlessCliCommand.DEPLOY && providedPackage) {
+      this.log("Deploying pre-built package. No need to create bindings");
+      return;
     } else {
       this.log("Clearing previous artifact");
       await this.packageService.clearPreviousArtifact();
-
+    }
+    if (this.originalCommand === ServerlessCliCommand.PACKAGE && providedPackage) {
+      this.log(`Building to specific package: ${providedPackage}`);
+      (this.serverless as ServerlessClass).service.package.artifact = providedPackage;
     }
     this.log("About to create bindings");
     await this.packageService.createBindings();

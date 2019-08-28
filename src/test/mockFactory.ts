@@ -15,7 +15,7 @@ import { ApiCorsPolicy, ApiManagementConfig } from "../models/apiManagement";
 import { ArmDeployment, ArmResourceTemplate, ArmTemplateProvisioningState } from "../models/armTemplates";
 import { ServicePrincipalEnvVariables } from "../models/azureProvider";
 import { Logger } from "../models/generic";
-import { ServerlessAzureConfig, ServerlessAzureProvider, ServerlessAzureFunctionConfig } from "../models/serverless";
+import { ServerlessAzureConfig, ServerlessAzureProvider, ServerlessAzureFunctionConfig, ServerlessClass, ServerlessCliCommand } from "../models/serverless";
 
 function getAttribute(object: any, prop: string, defaultValue: any): any {
   if (object && object[prop]) {
@@ -25,14 +25,18 @@ function getAttribute(object: any, prop: string, defaultValue: any): any {
 }
 
 export class MockFactory {
-  public static createTestServerless(config?: any): Serverless {
-    const sls = new Serverless(config);
+  public static createTestServerless(config?: any): ServerlessClass {
+    const sls = new Serverless(config) as ServerlessClass;
     sls.utils = getAttribute(config, "utils", MockFactory.createTestUtils());
     sls.cli = getAttribute(config, "cli", MockFactory.createTestCli());
     sls.pluginManager = getAttribute(config, "pluginManager", MockFactory.createTestPluginManager());
     sls.variables = getAttribute(config, "variables", MockFactory.createTestVariables());
     sls.service = getAttribute(config, "service", MockFactory.createTestService());
     sls.config.servicePath = "";
+    sls.processedInput = {
+      commands: [ ServerlessCliCommand.DEPLOY ],
+      options: {}
+    };
     return sls;
   }
 

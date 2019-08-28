@@ -1,5 +1,6 @@
 import { ApiManagementConfig } from "./apiManagement";
 import Serverless from "serverless";
+import Service from "serverless/classes/Service";
 
 export interface ArmTemplateConfig {
   file: string;
@@ -53,14 +54,23 @@ export interface ServerlessAzureProvider {
   runtime: string;
 }
 
-export class ServerlessObject extends Serverless {
+export class ServerlessClass extends Serverless {
   public processedInput: {
-    commands: ServerlessCliCommands[];
+    commands: ServerlessCliCommand[];
     options: any;
+  }
+  public service: ServerlessServiceClass;
+}
+
+export class ServerlessServiceClass extends Service {
+  public package: {
+    individually: boolean;
+    artifactDirectoryName: string;
+    artifact: string;
   }
 }
 
-export enum ServerlessCliCommands {
+export enum ServerlessCliCommand {
   PACKAGE = "package",
   DEPLOY = "deploy",
   INVOKE = "invoke",

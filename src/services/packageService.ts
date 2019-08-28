@@ -13,11 +13,9 @@ export class PackageService extends BaseService {
   }
 
   public async clearPreviousArtifact() {
-    this.log(this.defaultPackagePath);
-    this.log(this.originalCommand);
-    if (fs.existsSync(this.defaultPackagePath)) {
-      this.log(`Removing previous artifact ${this.defaultPackagePath}`);
-      fs.unlinkSync(this.defaultPackagePath);
+    if (fs.existsSync(this.packagePath)) {
+      this.log(`Removing previous artifact ${this.packagePath}`);
+      fs.unlinkSync(this.packagePath);
     }
   }
 
