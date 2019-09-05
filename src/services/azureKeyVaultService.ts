@@ -35,7 +35,7 @@ export class AzureKeyVaultService extends BaseService {
    * @param keyVaultConfig Azure Key Vault settings
    */
   public async setPolicy(keyVaultConfig: AzureKeyVaultConfig) {
-    const subscriptionID = this.getSubscriptionId();
+    const subscriptionID = this.subscriptionId;
 
     const func = await this.funcApp.get();
     const identity = func.identity;

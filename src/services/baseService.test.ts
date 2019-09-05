@@ -28,9 +28,9 @@ class MockService extends BaseService {
   public getProperties() {
     return {
       baseUrl: this.baseUrl,
-      serviceName: this.getServiceName(),
+      serviceName: this.serviceName,
       credentials: this.credentials,
-      subscriptionId: this.getSubscriptionId(),
+      subscriptionId: this.subscriptionId,
       resourceGroup: this.resourceGroup,
       deploymentName: this.deploymentName,
     };

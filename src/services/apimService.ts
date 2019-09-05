@@ -36,7 +36,7 @@ export class ApimService extends BaseService {
       this.apimConfig.backend = {} as any;
     }
 
-    this.apimClient = new ApiManagementClient(this.credentials, this.getSubscriptionId());
+    this.apimClient = new ApiManagementClient(this.credentials, this.subscriptionId);
     this.functionAppService = new FunctionAppService(serverless, options);
   }
 
@@ -173,10 +173,10 @@ export class ApimService extends BaseService {
     try {
       const functionAppResourceId = `https://management.azure.com${functionApp.id}`;
 
-      return await this.apimClient.backend.createOrUpdate(this.resourceGroup, this.apimConfig.name, this.getServiceName(), {
+      return await this.apimClient.backend.createOrUpdate(this.resourceGroup, this.apimConfig.name, this.serviceName, {
         credentials: {
           header: {
-            "x-functions-key": [`{{${this.getServiceName()}-key}}`],
+            "x-functions-key": [`{{${this.serviceName}-key}}`],
           },
         },
         title: this.apimConfig.backend.title || functionApp.name,
@@ -205,7 +205,7 @@ export class ApimService extends BaseService {
     options: ApiOperationOptions,
   ): Promise<OperationContract> {
     try {
-      const client = new ApiManagementClient(this.credentials, this.getSubscriptionId());
+      const client = new ApiManagementClient(this.credentials, this.subscriptionId);
 
       const operationConfig: OperationContract = {
         displayName: options.operation.displayName || options.function,
@@ -250,7 +250,7 @@ export class ApimService extends BaseService {
     this.log("-> Deploying API keys");
     try {
       const masterKey = await this.functionAppService.getMasterKey(functionApp);
-      const keyName = `${this.getServiceName()}-key`;
+      const keyName = `${this.serviceName}-key`;
 
       return await this.apimClient.property.createOrUpdate(this.resourceGroup, this.apimConfig.name, keyName, {
         displayName: keyName,
@@ -278,7 +278,7 @@ export class ApimService extends BaseService {
                 {
                   "_attr": {
                     "id": "apim-generated-policy",
-                    "backend-id": this.getServiceName(),
+                    "backend-id": this.serviceName,
                   }
                 },
               ],
