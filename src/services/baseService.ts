@@ -91,6 +91,20 @@ export abstract class BaseService {
   }
 
   /**
+   * Azure Tenant ID
+   */
+  public getTenantId(): string {
+    return this.config.provider.tenantId;
+  }
+
+  /**
+   * Azure Service Principal ID
+   */
+  public getServicePrincipalId(): string {
+    return this.config.provider.servicePrincipalId;
+  }
+
+  /**
    * Deployment config from `serverless.yml` or default.
    * Defaults can be found in the `config.ts` file
    */
@@ -257,8 +271,7 @@ export abstract class BaseService {
    * in config if passed through CLI
    */
   private setupConfig() {
-    const { prefix, region, stage, subscriptionId } = this.config.provider;
-
+    const { prefix, region, stage, subscriptionId, tenantId, servicePrincipalId } = this.config.provider;
     this.config.provider = {
       ...this.config.provider,
       prefix: this.getOption("prefix") || prefix,
@@ -267,7 +280,13 @@ export abstract class BaseService {
       subscriptionId: this.getOption("subscriptionId")
         || process.env.azureSubId
         || subscriptionId
-        || this.serverless.variables["subscriptionId"]
+        || this.serverless.variables["subscriptionId"],
+      tenantId: this.getOption("tenantId")
+        || process.env.azureServicePrincipalTenantId
+        || tenantId,
+      servicePrincipalId: this.getOption("servicePrincipalId")
+        || process.env.azureServicePrincipalClientId
+        || servicePrincipalId
     }
     this.config.provider.resourceGroup = (
       this.getOption("resourceGroup", this.config.provider.resourceGroup)
