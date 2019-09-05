@@ -22,7 +22,7 @@ export class FunctionAppService extends BaseService {
   public constructor(serverless: Serverless, options: Serverless.Options) {
     super(serverless, options);
 
-    this.webClient = new WebSiteManagementClient(this.credentials, this.subscriptionId);
+    this.webClient = new WebSiteManagementClient(this.credentials, this.getSubscriptionId());
     this.blobService = new AzureBlobStorageService(serverless, options);
   }
 

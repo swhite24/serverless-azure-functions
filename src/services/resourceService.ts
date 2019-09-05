@@ -12,7 +12,7 @@ export class ResourceService extends BaseService {
   public constructor(serverless: Serverless, options: Serverless.Options) {
     super(serverless, options);
 
-    this.resourceClient = new ResourceManagementClient(this.credentials, this.subscriptionId);
+    this.resourceClient = new ResourceManagementClient(this.credentials, this.getSubscriptionId());
   }
 
   /**

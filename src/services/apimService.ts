@@ -36,7 +36,7 @@ export class ApimService extends BaseService {
       this.apimConfig.backend = {} as any;
     }
 
-    this.apimClient = new ApiManagementClient(this.credentials, this.subscriptionId);
+    this.apimClient = new ApiManagementClient(this.credentials, this.getSubscriptionId());
     this.functionAppService = new FunctionAppService(serverless, options);
   }
 
@@ -205,7 +205,7 @@ export class ApimService extends BaseService {
     options: ApiOperationOptions,
   ): Promise<OperationContract> {
     try {
-      const client = new ApiManagementClient(this.credentials, this.subscriptionId);
+      const client = new ApiManagementClient(this.credentials, this.getSubscriptionId());
 
       const operationConfig: OperationContract = {
         displayName: options.operation.displayName || options.function,

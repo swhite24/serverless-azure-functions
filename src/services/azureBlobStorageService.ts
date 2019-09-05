@@ -286,7 +286,7 @@ export class AzureBlobStorageService extends BaseService {
    * Get access key for storage account
    */
   private async getKey(): Promise<string> {
-    const context = new StorageManagementClientContext(this.credentials, this.subscriptionId)
+    const context = new StorageManagementClientContext(this.credentials, this.getSubscriptionId())
     const storageAccounts = new StorageAccounts(context);
     const keys = await storageAccounts.listKeys(this.resourceGroup, this.storageAccountName);
     return keys.keys[0].value;

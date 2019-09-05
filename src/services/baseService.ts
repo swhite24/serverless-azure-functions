@@ -15,6 +15,7 @@ import {
 import { Guard } from "../shared/guard";
 import { Utils } from "../shared/utils";
 import { AzureNamingService } from "./namingService";
+import { ConfigService } from "./configService"
 
 export abstract class BaseService {
   protected baseUrl: string;
@@ -27,6 +28,7 @@ export abstract class BaseService {
   protected deploymentConfig: DeploymentConfig;
   protected storageAccountName: string;
   protected config: ServerlessAzureConfig;
+  protected configService: ConfigService;
 
   protected constructor(
     protected serverless: Serverless,
@@ -35,13 +37,12 @@ export abstract class BaseService {
   ) {
     Guard.null(serverless);
     this.setDefaultValues();
-    this.config = serverless.service as any;
-    this.setupConfig();
+    this.configService = new ConfigService(serverless, options);
+    this.config = this.configService.getConfig();
 
     this.baseUrl = "https://management.azure.com";
-    this.serviceName = this.getServiceName();
+    this.serviceName = this.configService.getServiceName();
     this.credentials = serverless.variables["azureCredentials"];
-    this.subscriptionId = this.config.provider.subscriptionId;
     this.resourceGroup = this.getResourceGroupName();
     this.deploymentConfig = this.getDeploymentConfig();
     this.deploymentName = this.getDeploymentName();
@@ -101,7 +102,7 @@ export abstract class BaseService {
     }
   }
 
-  /**
+    /**
    * Name of current ARM deployment.
    *
    * Naming convention:
@@ -116,13 +117,6 @@ export abstract class BaseService {
       this.config,
       (this.deploymentConfig.rollback) ? `t${this.getTimestamp()}` : null
     )
-  }
-
-  /**
-   * Name of Function App Service
-   */
-  public getServiceName(): string {
-    return this.serverless.service["service"];
   }
 
   /**
@@ -250,27 +244,5 @@ export abstract class BaseService {
       this.serverless.variables["packageTimestamp"] = timestamp;
     }
     return timestamp;
-  }
-
-  /**
-   * Overwrite values for resourceGroup, prefix, region and stage
-   * in config if passed through CLI
-   */
-  private setupConfig() {
-    const { prefix, region, stage, subscriptionId } = this.config.provider;
-
-    this.config.provider = {
-      ...this.config.provider,
-      prefix: this.getOption("prefix") || prefix,
-      stage: this.getOption("stage") || stage,
-      region: this.getOption("region") || region,
-      subscriptionId: this.getOption("subscriptionId")
-        || process.env.azureSubId
-        || subscriptionId
-        || this.serverless.variables["subscriptionId"]
-    }
-    this.config.provider.resourceGroup = (
-      this.getOption("resourceGroup", this.config.provider.resourceGroup)
-    ) || AzureNamingService.getResourceName(this.config, null, `${this.getServiceName()}-rg`);
   }
 }

@@ -30,7 +30,7 @@ class MockService extends BaseService {
       baseUrl: this.baseUrl,
       serviceName: this.serviceName,
       credentials: this.credentials,
-      subscriptionId: this.subscriptionId,
+      subscriptionId: this.getSubscriptionId(),
       resourceGroup: this.resourceGroup,
       deploymentName: this.deploymentName,
     };
