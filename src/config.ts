@@ -35,6 +35,12 @@ export const configConstants = {
   scmZipDeployApiPath: "/api/zipdeploy",
   resourceGroupHashLength: 6,
   defaultLocalPort: 7071,
+  variableKeys: {
+    serverlessAzureConfig: "serverlessAzureConfig",
+    deploymentConfig: "deploymentConfig",
+    azureCredentials: "azureCredentials",
+    packageTimestamp: "packageTimestamp",
+  }
 };
 
 export default configConstants;

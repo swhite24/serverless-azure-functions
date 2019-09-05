@@ -46,7 +46,7 @@ export class MockFactory {
     if (!functions) {
       functions = MockFactory.createTestSlsFunctionConfig()
     }
-    const serviceName = "serviceName";
+    const serviceName = "servicename";
     return {
       getAllFunctions: jest.fn(() => Object.keys(functions)),
       getFunction: jest.fn((name: string) => functions[name]),

@@ -9,6 +9,7 @@ import { FunctionAppService } from "./functionAppService";
 import { ResourceService } from "./resourceService";
 import { ArmDeployment } from "../models/armTemplates";
 import fs from "fs";
+import { ConfigService } from "./configService";
 
 /**
  * Services for the Rollback Plugin
@@ -41,7 +42,7 @@ export class RollbackService extends BaseService {
       return;
     }
     // Name of artifact in blob storage
-    const artifactName = this.getArtifactName(deployment.name);
+    const artifactName = ConfigService.getArtifactName(deployment.name);
     // Redeploy resource group (includes SAS token URL if running from blob URL)
     await this.redeployDeployment(deployment, artifactName);
   }

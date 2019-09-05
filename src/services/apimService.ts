@@ -173,10 +173,10 @@ export class ApimService extends BaseService {
     try {
       const functionAppResourceId = `https://management.azure.com${functionApp.id}`;
 
-      return await this.apimClient.backend.createOrUpdate(this.resourceGroup, this.apimConfig.name, this.serviceName, {
+      return await this.apimClient.backend.createOrUpdate(this.resourceGroup, this.apimConfig.name, this.getServiceName(), {
         credentials: {
           header: {
-            "x-functions-key": [`{{${this.serviceName}-key}}`],
+            "x-functions-key": [`{{${this.getServiceName()}-key}}`],
           },
         },
         title: this.apimConfig.backend.title || functionApp.name,
@@ -250,7 +250,7 @@ export class ApimService extends BaseService {
     this.log("-> Deploying API keys");
     try {
       const masterKey = await this.functionAppService.getMasterKey(functionApp);
-      const keyName = `${this.serviceName}-key`;
+      const keyName = `${this.getServiceName()}-key`;
 
       return await this.apimClient.property.createOrUpdate(this.resourceGroup, this.apimConfig.name, keyName, {
         displayName: keyName,
@@ -278,7 +278,7 @@ export class ApimService extends BaseService {
                 {
                   "_attr": {
                     "id": "apim-generated-policy",
-                    "backend-id": this.serviceName,
+                    "backend-id": this.getServiceName(),
                   }
                 },
               ],

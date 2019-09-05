@@ -67,6 +67,10 @@ export class FuncService extends BaseService {
     return this.serverless.utils.readFileSync(this.slsConfigFile());
   }
 
+  private slsConfigFile(): string {
+    return "config" in this.options ? this.options["config"] : "serverless.yml";
+  }
+
   private updateFunctionsYml(functionYml: any) {
     const serverlessYml = this.getServerlessYml();
     serverlessYml["functions"] = functionYml;

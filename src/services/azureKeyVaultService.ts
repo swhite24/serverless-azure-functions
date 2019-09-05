@@ -1,8 +1,8 @@
+import { KeyVaultManagementClient } from "@azure/arm-keyvault";
+import { SecretPermissions, Vault } from "@azure/arm-keyvault/esm/models/index";
 import Serverless from "serverless";
 import { BaseService } from "./baseService";
 import { FunctionAppService } from "./functionAppService";
-import { KeyVaultManagementClient } from "@azure/arm-keyvault";
-import { KeyPermissions, SecretPermissions, Vault } from "@azure/arm-keyvault/esm/models/index";
 
 /**
  * Defines the Azure Key Vault configuration

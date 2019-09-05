@@ -4,7 +4,6 @@ import fs from "fs";
 import request from "request";
 import Serverless from "serverless";
 import { StorageAccountResource } from "../armTemplates/resources/storageAccount";
-import { configConstants } from "../config";
 import {
   DeploymentConfig,
   ServerlessAzureConfig,
@@ -14,7 +13,6 @@ import {
 } from "../models/serverless";
 import { Guard } from "../shared/guard";
 import { Utils } from "../shared/utils";
-import { AzureNamingService } from "./namingService";
 import { ConfigService } from "./configService"
 
 export abstract class BaseService {
@@ -28,7 +26,6 @@ export abstract class BaseService {
   protected deploymentConfig: DeploymentConfig;
   protected storageAccountName: string;
   protected config: ServerlessAzureConfig;
-  protected configService: ConfigService;
 
   protected constructor(
     protected serverless: Serverless,
@@ -36,17 +33,14 @@ export abstract class BaseService {
     authenticate: boolean = true
   ) {
     Guard.null(serverless);
-    this.setDefaultValues();
-    this.configService = new ConfigService(serverless, options);
-    this.config = this.configService.getConfig();
+    this.config = ConfigService.getConfig(serverless, options);
 
     this.baseUrl = "https://management.azure.com";
-    this.serviceName = this.configService.getServiceName();
     this.credentials = serverless.variables["azureCredentials"];
     this.resourceGroup = this.getResourceGroupName();
-    this.deploymentConfig = this.getDeploymentConfig();
-    this.deploymentName = this.getDeploymentName();
-    this.artifactName = this.getArtifactName(this.deploymentName);
+    this.deploymentConfig = ConfigService.getDeploymentConfig(serverless);
+    this.deploymentName = ConfigService.getDeploymentName(serverless);
+    this.artifactName = ConfigService.getArtifactName(this.deploymentName);
     this.storageAccountName = StorageAccountResource.getResourceName(this.config);
 
     if (!this.credentials && authenticate) {
@@ -85,49 +79,21 @@ export abstract class BaseService {
   }
 
   /**
+   * Service name for application
+   */
+  public getServiceName(): string {
+    return this.serverless.service["service"];
+  }
+
+  /**
    * Azure Subscription ID
    */
   public getSubscriptionId(): string {
     return this.config.provider.subscriptionId;
   }
 
-  /**
-   * Deployment config from `serverless.yml` or default.
-   * Defaults can be found in the `config.ts` file
-   */
-  public getDeploymentConfig(): DeploymentConfig {
-    return {
-      ...configConstants.deploymentConfig,
-      ...this.config.provider.deployment,
-    }
-  }
-
-    /**
-   * Name of current ARM deployment.
-   *
-   * Naming convention:
-   *
-   * {safeName (see naming service)}--{serviceName}(if rollback enabled: -t{timestamp})
-   *
-   * The string is guaranteed to be less than 64 characters, since that is the limit
-   * imposed by Azure deployment names. If a trim is needed, the service name will be trimmed
-   */
   public getDeploymentName(): string {
-    return AzureNamingService.getDeploymentName(
-      this.config,
-      (this.deploymentConfig.rollback) ? `t${this.getTimestamp()}` : null
-    )
-  }
-
-  /**
-   * Get rollback-configured artifact name. Contains `-t{timestamp}`
-   * Takes name of deployment and replaces `rg-deployment` or `deployment` with `artifact`
-   */
-  protected getArtifactName(deploymentName: string): string {
-    const { deployment, artifact } = configConstants.naming.suffix;
-    return `${deploymentName
-      .replace(`rg-${deployment}`, artifact)
-      .replace(deployment, artifact)}.zip`
+    return ConfigService.getDeploymentName(this.serverless);
   }
 
   /**
@@ -198,11 +164,7 @@ export abstract class BaseService {
    * Get function objects
    */
   protected slsFunctions(): { [functionName: string]: ServerlessAzureFunctionConfig } {
-    return this.serverless.service["functions"];
-  }
-
-  protected slsConfigFile(): string {
-    return "config" in this.options ? this.options["config"] : "serverless.yml";
+    return this.config.functions;
   }
 
   protected getOption(key: string, defaultValue?: any) {
@@ -211,38 +173,5 @@ export abstract class BaseService {
 
   protected prettyPrint(object: any) {
     this.log(JSON.stringify(object, null, 2));
-  }
-
-  private setDefaultValues(): void {
-    // TODO: Right now the serverless core will always default to AWS default region if the
-    // region has not been set in the serverless.yml or CLI options
-    const awsDefault = "us-east-1";
-    const providerRegion = this.serverless.service.provider.region;
-
-    if (!providerRegion || providerRegion === awsDefault) {
-      // no region specified in serverless.yml
-      this.serverless.service.provider.region = this.serverless.service.provider["location"] || "westus";
-    }
-
-    if (!this.serverless.service.provider.stage) {
-      this.serverless.service.provider.stage = "dev";
-    }
-
-    if (!this.serverless.service.provider["prefix"]) {
-      this.serverless.service.provider["prefix"] = "sls";
-    }
-  }
-
-  /**
-   * Get timestamp from `packageTimestamp` serverless variable
-   * If not set, create timestamp, set variable and return timestamp
-   */
-  private getTimestamp(): number {
-    let timestamp = +this.serverless.variables["packageTimestamp"];
-    if (!timestamp) {
-      timestamp = Date.now();
-      this.serverless.variables["packageTimestamp"] = timestamp;
-    }
-    return timestamp;
   }
 }

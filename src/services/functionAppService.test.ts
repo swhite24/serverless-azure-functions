@@ -17,6 +17,7 @@ jest.mock("./azureBlobStorageService");
 import { AzureBlobStorageService } from "./azureBlobStorageService"
 import configConstants from "../config";
 import { Utils } from "../shared/utils";
+import { ConfigService } from "./configService";
 
 describe("Function App Service", () => {
   const app = MockFactory.createTestSite();
@@ -64,7 +65,7 @@ describe("Function App Service", () => {
     mockFs({
       "app.zip": "contents",
       ".serverless": {
-        "serviceName.zip": "contents",
+        "servicename.zip": "contents",
       }
     }, { createCwd: true, createTmp: true });
 
@@ -244,8 +245,8 @@ describe("Function App Service", () => {
   it("uploads functions to function app and blob storage", async () => {
     const scmDomain = app.enabledHostNames.find((hostname) => hostname.endsWith("scm.azurewebsites.net"));
     const expectedUploadUrl = `https://${scmDomain}/api/zipdeploy/`;
-
-    const service = createService();
+    const sls = MockFactory.createTestServerless();
+    const service = createService(sls);
     await service.uploadFunctions(app);
 
     expect((FunctionAppService.prototype as any).sendFile).toBeCalledWith({
@@ -258,7 +259,7 @@ describe("Function App Service", () => {
         ContentType: "application/octet-stream",
       }
     }, slsService["artifact"]);
-    const expectedArtifactName = service.getDeploymentName().replace("rg-deployment", "artifact");
+    const expectedArtifactName = ConfigService.getDeploymentName(sls).replace("rg-deployment", "artifact");
     expect((AzureBlobStorageService.prototype as any).uploadFile).toBeCalledWith(
       slsService["artifact"],
       configConstants.deploymentConfig.container,
@@ -271,13 +272,12 @@ describe("Function App Service", () => {
   it("uploads functions to function app and blob storage with default naming convention", async () => {
     const scmDomain = app.enabledHostNames.find((hostname) => hostname.endsWith("scm.azurewebsites.net"));
     const expectedUploadUrl = `https://${scmDomain}/api/zipdeploy/`;
-
     const sls = MockFactory.createTestServerless();
     delete sls.service["artifact"]
+    const defaultArtifact = path.join(".serverless", `${sls.service.getServiceName()}.zip`);
     const service = createService(sls);
     await service.uploadFunctions(app);
 
-    const defaultArtifact = path.join(".serverless", `${sls.service.getServiceName()}.zip`);
 
     expect((FunctionAppService.prototype as any).sendFile).toBeCalledWith({
       method: "POST",

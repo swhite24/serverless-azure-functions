@@ -15,9 +15,15 @@ describe("Storage Account Resource", () => {
       name: "azure",
       region: "westus",
       stage: "dev",
-      resourceGroup
+      resourceGroup,
+      runtime: "nodejs10.x"
     },
-    service: "test-api"
+    service: "test-api",
+    package: {
+      artifact: "",
+      artifactDirectoryName: "",
+      individually: false
+    }
   }
 
   it("Generates safe storage account name with short parts", () => {
