@@ -46,7 +46,7 @@ export class AppServicePlanResource implements ArmResourceTemplateGenerator {
             "workerSizeId": "3",
             "numberOfWorkers": "1",
             "maximumElasticWorkerCount": "10",
-            "hostingEnvironment": ""
+            "reserved": true
           },
           "sku": {
             "name": "[parameters('appServicePlanSkuName')]",
@@ -60,7 +60,7 @@ export class AppServicePlanResource implements ArmResourceTemplateGenerator {
   public getParameters(config: ServerlessAzureConfig): ArmParameters {
     const resourceConfig: ResourceConfig = {
       sku: {},
-      ...config.provider.storageAccount,
+      ...config.provider.appServicePlan,
     };
 
     return {
