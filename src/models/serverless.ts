@@ -41,6 +41,7 @@ export interface ServerlessAzureProvider {
   deployment?: DeploymentConfig;
   deploymentName?: string;
   resourceGroup?: string;
+  independentResourceGroup?: boolean;
   apim?: ApiManagementConfig;
   functionApp?: FunctionAppConfig;
   appInsights?: ResourceConfig;

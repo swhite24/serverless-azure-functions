@@ -78,7 +78,9 @@ export class AzureDeployPlugin extends AzureBasePlugin<AzureLoginOptions> {
     if (!fs.existsSync(zipFile)) {
       throw new Error(`Function app zip file '${zipFile}' does not exist`);
     }
-    await resourceService.deployResourceGroup();
+    if (!this.config.provider.independentResourceGroup) {
+      await resourceService.deployResourceGroup();
+    }
     const functionApp = await functionAppService.deploy();
     await functionAppService.uploadFunctions(functionApp);
   }
