@@ -181,7 +181,7 @@ export abstract class BaseService {
       fs.createReadStream(filePath).pipe(
         request(requestOptions, (err, response) => {
           if (err) {
-            this.log(JSON.stringify(err, null, 4));
+            this.log(this.stringify(err));
             return reject(err);
           }
           resolve(response);
@@ -196,6 +196,10 @@ export abstract class BaseService {
    */
   protected log(message: string, options?: ServerlessLogOptions, entity?: string) {
     (this.serverless.cli.log as any)(message, entity, options);
+  }
+
+  protected stringify(object: any) {
+    return JSON.stringify(object, null, 2);
   }
 
   /**
@@ -214,7 +218,7 @@ export abstract class BaseService {
   }
 
   protected prettyPrint(object: any) {
-    this.log(JSON.stringify(object, null, 2));
+    this.log(this.stringify(object));
   }
 
   private setDefaultValues(): void {

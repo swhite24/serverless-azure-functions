@@ -68,7 +68,10 @@ export class FunctionAppService extends BaseService {
 
     this.log("Syncing function triggers");
 
-    const syncTriggersUrl = `${this.baseUrl}${functionApp.id}/syncfunctiontriggers?api-version=2016-08-01`;
+    const syncTriggersUrl = `${this.baseUrl}/subscriptions/${this.subscriptionId}` +
+      `/resourceGroups/${this.resourceGroup}/providers/Microsoft.Web/sites/${functionApp.name}` +
+      "/syncfunctiontriggers?api-version=2016-08-01";
+
     return await this.sendApiRequest("POST", syncTriggersUrl);
   }
 
@@ -101,7 +104,7 @@ export class FunctionAppService extends BaseService {
 
         if (listFunctionsResponse.status !== 200 || listFunctionsResponse.data.value.length === 0) {
           this.log(`-> Function App not ready. Retry ${retries++} of ${FunctionAppService.retryCount}...`);
-          const response = JSON.stringify(listFunctionsResponse.data, null, 2);
+          const response = this.stringify(listFunctionsResponse.data);
           throw new Error(
             `The function app is taking longer than usual to be provisioned. Please try again soon.
             Response error data: \n${response}`
@@ -136,7 +139,7 @@ export class FunctionAppService extends BaseService {
 
         if (getFunctionResponse.status !== 200) {
           this.log("-> Function app not ready. Retrying...")
-          throw new Error(JSON.stringify(response.data, null, 2));
+          throw new Error(this.stringify(response.data));
         }
 
         return getFunctionResponse;
@@ -169,8 +172,12 @@ export class FunctionAppService extends BaseService {
         configConstants.runFromPackageSetting,
         sasUrl
       );
+
+      await this.syncTriggers(functionApp);
     } else {
       await Promise.all([
+        // Can run in parallel if also uploading to function app
+        // Needs to happen first if `runFromBlobUrl` is true
         this.uploadZippedArtifactToBlobStorage(functionZipFile),
         this.uploadZippedArfifactToFunctionApp(functionApp, functionZipFile)
       ]);

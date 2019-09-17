@@ -17,15 +17,18 @@ jest.mock("./azureBlobStorageService");
 import { AzureBlobStorageService } from "./azureBlobStorageService"
 import configConstants from "../config";
 import { Utils } from "../shared/utils";
+import { ServerlessAzureConfig } from "../models/serverless";
 
 describe("Function App Service", () => {
   const app = MockFactory.createTestSite();
   const slsService = MockFactory.createTestService();
+  const config: ServerlessAzureConfig = slsService as any;
   const variables = MockFactory.createTestVariables();
   const provider = MockFactory.createTestAzureServiceProvider();
 
   const masterKey = "masterKey";
   const authKey = "authKey";
+  const subscriptionId = "subId";
   const syncTriggersMessage = "sync triggers success";
   const deleteFunctionMessage = "delete function success";
   const functions = MockFactory.createTestSlsFunctionConfig();
@@ -34,7 +37,9 @@ describe("Function App Service", () => {
   const baseUrl = "https://management.azure.com"
   const masterKeyUrl = `https://${app.defaultHostName}/admin/host/systemkeys/_master`;
   const authKeyUrl = `${baseUrl}${app.id}/functions/admin/token?api-version=2016-08-01`;
-  const syncTriggersUrl = `${baseUrl}${app.id}/syncfunctiontriggers?api-version=2016-08-01`;
+  const syncTriggersUrl = `${baseUrl}/subscriptions/${subscriptionId}` +
+    `/resourceGroups/${config.provider.resourceGroup}/providers/Microsoft.Web/sites/${app.name}` +
+    "/syncfunctiontriggers?api-version=2016-08-01";
   const listFunctionsUrl = `${baseUrl}${app.id}/functions?api-version=2016-08-01`;
 
   const appSettings = {
@@ -86,12 +91,16 @@ describe("Function App Service", () => {
   });
 
   function createService(sls?: Serverless, options?: Serverless.Options) {
+    options = options || MockFactory.createTestServerlessOptions();
     return new FunctionAppService(
       sls || MockFactory.createTestServerless({
         service: slsService,
         variables: variables,
       }),
-      options || MockFactory.createTestServerlessOptions()
+      {
+        ...options,
+        subscriptionId: subscriptionId
+      } as any
     )
   }
 
@@ -119,7 +128,6 @@ describe("Function App Service", () => {
     const service = createService();
     const result = await service.getMasterKey();
     expect(result).toEqual(masterKey);
-
   });
 
   it("deletes function", async () => {
